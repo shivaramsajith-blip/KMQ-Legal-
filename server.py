@@ -182,3 +182,12 @@ def import_data():
 
 if __name__ == '__main__':
     app.run(debug=True, port=int(os.environ.get('PORT',5000)))
+
+import json
+
+with open("backup.json") as f:
+    data = json.load(f)
+
+for item in data:
+    # adjust this line ONLY if needed
+    print(item)
