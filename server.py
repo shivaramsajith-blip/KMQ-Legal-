@@ -185,8 +185,16 @@ if __name__ == '__main__':
 
 import json
 
-with open("backup.json") as f:
-    data = json.load(f)
+try:
+    with open("backup.json") as f:
+        data = json.load(f)
+
+    print("=== DATA LOADED ===")
+    print(type(data))
+    print(str(data)[:1000])  # print only first part
+
+except Exception as e:
+    print("ERROR:", e)
 
 for item in data:
     # adjust this line ONLY if needed
