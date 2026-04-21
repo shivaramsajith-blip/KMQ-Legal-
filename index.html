@@ -52,7 +52,7 @@
   .content{flex:1;overflow-y:auto;padding:22px 26px;}
 
   /* STATS */
-  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
   .stat-card{background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:15px 18px;}
   .stat-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px;}
   .stat-value{font-family:var(--font-d);font-size:30px;font-weight:700;color:var(--gold);line-height:1;}
@@ -74,7 +74,8 @@
   .b-dormant{background:rgba(90,94,107,.2);color:var(--grey);}
   .b-urgent{background:rgba(231,76,60,.15);color:var(--red);}
   .b-hearing{background:rgba(52,152,219,.15);color:var(--blue);}
-  .b-closed{background:rgba(255,255,255,.05);color:#555;}   .b-followup{background:rgba(155,89,182,.15);color:#9B59B6;}
+  .b-closed{background:rgba(255,255,255,.05);color:#555;}
+  .b-followup{background:rgba(155,89,182,.15);color:#9B59B6;}
   .dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;}
   .court-tag{font-size:11px;color:var(--text-muted);background:var(--dark3);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:2px 7px;}
   .avatar{width:27px;height:27px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--dark);flex-shrink:0;}
@@ -255,11 +256,11 @@
       <div class="stat-card"><div class="stat-label">Total Cases</div><div class="stat-value" id="s-total">0</div><div class="stat-sub">All time</div></div>
       <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value" id="s-active">0</div><div class="stat-sub">In progress</div></div>
       <div class="stat-card"><div class="stat-label">Urgent</div><div class="stat-value" id="s-urgent" style="color:var(--red)">0</div><div class="stat-sub">Within 7 days</div></div>
-      <div class="stat-card"><div class="stat-label">Dormant</div><div class="stat-value" id="s-dormant" style="color:var(--grey)">0</div><div class="stat-sub">On hold</div></div>       <div class="stat-card"><div class="stat-label">Follow Up</div><div class="stat-value" id="s-followup" style="color:#9B59B6">0</div><div class="stat-sub">Needs attention</div></div>
+      <div class="stat-card"><div class="stat-label">Dormant</div><div class="stat-value" id="s-dormant" style="color:var(--grey)">0</div><div class="stat-sub">On hold</div></div>
     </div>
-    <div id="upcoming-section"></div>     <div id="followup-section"></div>
+    <div id="upcoming-section"></div>
     <div class="section-title" style="margin-top:4px;">Recent Cases</div>
-    <div class="table-wrap"><table><thead><tr><th>Case No.</th><th>Title</th><th>Status</th><th>Court</th><th>Next Hearing</th><th>Remarks</th></tr></thead>
+    <div class="table-wrap"><table><thead><tr><th>Case No.</th><th>Title</th><th>Status</th><th>Court</th><th>Next Hearing</th><th>Assigned</th></tr></thead>
     <tbody id="recent-tbody"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody></table></div>
   </div>
 
@@ -270,8 +271,9 @@
       <div class="chip active" onclick="setChip('All',this)">All</div>
       <div class="chip" onclick="setChip('Active',this)">Active</div>
       <div class="chip" onclick="setChip('Urgent',this)">Urgent</div>
-      <div class="chip" onclick="setChip('Follow Up',this)">Follow Up</div>       <div class="chip" onclick="setChip('Dormant',this)">Dormant</div>
+      <div class="chip" onclick="setChip('Dormant',this)">Dormant</div>
       <div class="chip" onclick="setChip('Hearing Scheduled',this)">Hearing Scheduled</div>
+      <div class="chip" onclick="setChip('Follow Up',this)">Follow Up</div>
       <div class="chip" onclick="setChip('Closed',this)">Closed</div>
     </div>
     <div class="table-wrap"><table><thead><tr>
@@ -280,7 +282,7 @@
       <th onclick="sortBy('status')">Status ↕</th>
       <th>Court</th>
       <th onclick="sortBy('next_hearing')">Next Hearing ↕</th>
-      <th>Assigned</th>
+      <th>Remarks</th>
       <th>Type</th>
       <th>Actions</th>
     </tr></thead><tbody id="all-tbody"></tbody></table>
@@ -341,7 +343,7 @@
     <div class="mbody">
       <div class="form-grid">
         <div class="fg"><label class="fl">Case Number</label><input class="fc" id="f-num" placeholder="e.g. 2026/123/Commercial"></div>
-        <div class="fg"><label class="fl">Status</label><select class="fc" id="f-status"><option>Active</option><option>Urgent</option><option>Dormant</option><option>Hearing Scheduled</option></select></div>
+        <div class="fg"><label class="fl">Status</label><select class="fc" id="f-status"><option>Active</option><option>Urgent</option><option>Follow Up</option><option>Dormant</option><option>Hearing Scheduled</option></select></div>
         <div class="fg full"><label class="fl">Case Title *</label><input class="fc" id="f-title" placeholder="e.g. Party A v. Party B"></div>
         <div class="fg"><label class="fl">Client Name</label><input class="fc" id="f-client"></div>
         <div class="fg"><label class="fl">Opposing Party</label><input class="fc" id="f-opp"></div>
@@ -379,7 +381,7 @@
     <div class="mbody">
       <div class="form-grid">
         <div class="fg"><label class="fl">Case Number</label><input class="fc" id="e-num"></div>
-        <div class="fg"><label class="fl">Status</label><select class="fc" id="e-status"><option>Active</option><option>Urgent</option><option>Dormant</option><option>Hearing Scheduled</option><option>Follow Up</option><option>Closed</option></select></div>
+        <div class="fg"><label class="fl">Status</label><select class="fc" id="e-status"><option>Active</option><option>Urgent</option><option>Follow Up</option><option>Dormant</option><option>Hearing Scheduled</option><option>Closed</option></select></div>
         <div class="fg full"><label class="fl">Case Title</label><input class="fc" id="e-title"></div>
         <div class="fg"><label class="fl">Client</label><input class="fc" id="e-client"></div>
         <div class="fg"><label class="fl">Opposing Party</label><input class="fc" id="e-opp"></div>
@@ -473,7 +475,7 @@ function updateBadges(){
   document.getElementById('s-total').textContent = cases.length;
   document.getElementById('s-active').textContent = active;
   document.getElementById('s-urgent').textContent = urgent;
-  document.getElementById('s-dormant').textContent = dormant;   const followup = cases.filter(c=>c.status==='Follow Up').length;   const sfu = document.getElementById('s-followup');   if(sfu) sfu.textContent = followup;
+  document.getElementById('s-dormant').textContent = dormant;
 }
 
 function statusBadge(s){
@@ -539,24 +541,37 @@ function renderAll(){
   // Group by client
   const grouped = {};
   list.forEach(c=>{ const k=c.client||'(No Client)'; if(!grouped[k]) grouped[k]=[]; grouped[k].push(c); });
+  const multiClients = Object.keys(grouped).filter(k=>grouped[k].length>1);
+  const singleClients = Object.keys(grouped).filter(k=>grouped[k].length===1);
   let html='';
-  for(const [client,clientCases] of Object.entries(grouped)){
-    const multi=clientCases.length>1;
-    const collapsed=collapsedClients.has(client);
-    if(multi){
-      const safe=client.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      html+=`<tr class="client-group-row">
-        <td colspan="8"><div class="client-group-header">
-          <div class="avatar" style="background:${acolor(client)};width:22px;height:22px;font-size:9px;">${initials(client)}</div>
-          ${client}
+
+  multiClients.forEach((client,idx)=>{
+    const clientCases = grouped[client];
+    const collapsed = collapsedClients.has(client);
+    const safe = client.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    if(idx>0) html+=`<tr><td colspan="8" style="height:12px;background:var(--dark);border:none;padding:0;"></td></tr>`;
+    html+=`<tr class="client-group-row" style="border-top:2px solid rgba(201,168,76,0.5);">
+      <td colspan="8" style="padding:10px 16px;">
+        <div class="client-group-header">
+          <div class="avatar" style="background:${acolor(client)};width:28px;height:28px;font-size:11px;flex-shrink:0;">${initials(client)}</div>
+          <span style="font-size:14px;font-weight:600;color:var(--gold);">${client}</span>
           <span class="cg-count">${clientCases.length} cases</span>
-          <span class="cg-toggle" onclick="toggleClientGroup('${safe}')">${collapsed?'▶ Show':'▼ Hide'}</span>
-        </div></td></tr>`;
-      if(!collapsed) clientCases.forEach(c=>{ html+=caseRow(c,true,'case-indent'); });
-    } else {
-      html+=caseRow(clientCases[0],true,'');
+          <span class="cg-toggle" onclick="toggleClientGroup('${safe}')">${collapsed?'▶ Show cases':'▼ Hide cases'}</span>
+        </div>
+      </td>
+    </tr>`;
+    if(!collapsed) clientCases.forEach(c=>{ html+=caseRow(c,true,'case-indent'); });
+    html+=`<tr><td colspan="8" style="height:2px;background:rgba(201,168,76,0.3);border:none;padding:0;"></td></tr>`;
+  });
+
+  if(singleClients.length){
+    if(multiClients.length){
+      html+=`<tr><td colspan="8" style="height:14px;background:var(--dark);border:none;padding:0;"></td></tr>`;
+      html+=`<tr style="background:var(--dark2);"><td colspan="8" style="padding:6px 16px;border-bottom:1px solid var(--border);"><span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);">Individual Cases</span></td></tr>`;
     }
+    singleClients.forEach(client=>{ html+=caseRow(grouped[client][0],true,''); });
   }
+
   tbody.innerHTML=html;
 }
 
@@ -573,6 +588,7 @@ function caseRow(c, full, extraClass=''){
   const assignee = c.assignee
     ? `<div class="assignee-cell"><div class="avatar" style="background:${acolor(c.assignee)}">${initials(c.assignee)}</div>${c.assignee}</div>`
     : '—';
+  const remarks = c.notes ? `<span style="color:var(--text-muted);font-size:12px;">${c.notes.substring(0,60)}${c.notes.length>60?'...':''}</span>` : '<span style="color:var(--text-muted);">—</span>';
   const actions = full ? `<td><div style="display:flex;gap:5px">
     <button class="icon-btn" onclick="event.stopPropagation();openDetail('${c.id}')">👁</button>
     <button class="icon-btn" onclick="event.stopPropagation();openEdit('${c.id}')">✏</button>
@@ -584,7 +600,7 @@ function caseRow(c, full, extraClass=''){
     <td>${statusBadge(c.status)}</td>
     <td><span class="court-tag">${highlight(c.court||'—', q)}</span></td>
     <td>${dateHtml}</td>
-    <td>${c.notes ? `<span style="color:var(--text-muted);font-size:12px;">${c.notes.substring(0,60)}${c.notes.length>60?'...':''}</span>` : '—'}</td>
+    <td>${remarks}</td>
     ${full?`<td style="color:var(--text-muted);font-size:12px">${highlight(c.type||'—', q)}</td>`:''}
     ${actions}
   </tr>`;
@@ -682,7 +698,7 @@ function hlite(text,q){
   return text.replace(new RegExp('('+escaped+')','gi'),'<mark>$1</mark>');
 }
 function statusIcon(s){
-  return {Active:'🟢',Urgent:'🔴',Dormant:'⏸','Hearing Scheduled':'📅',Closed:'✅'}[s]||'📁';
+  return {Active:'🟢',Urgent:'🔴',Dormant:'⏸','Hearing Scheduled':'📅',Closed:'✅','Follow Up':'🔔'}[s]||'📁';
 }
 function pickResult(id){
   document.getElementById('search-dropdown').style.display='none';
@@ -755,8 +771,25 @@ function openDetail(id){
   if(c.timeline&&c.timeline.length){
     body+=`<div class="section-title">Progression Timeline</div><div class="timeline">`;
     [...c.timeline].reverse().forEach((t,i,a)=>{
-      body+=`<div class="ti"><div class="tdw"><div class="tdd"></div>${i<a.length-1?'<div class="tline"></div>':''}</div>
-        <div class="tc"><div class="tdate">${fdate(t.date)}</div><div class="ttext">${t.text}</div></div></div>`;
+      const realIdx = c.timeline.length - 1 - i;
+      body+=`<div class="ti">
+        <div class="tdw"><div class="tdd"></div>${i<a.length-1?'<div class="tline"></div>':''}</div>
+        <div class="tc" style="flex:1;">
+          <div class="tdate" style="display:flex;align-items:center;gap:8px;">
+            ${fdate(t.date)}
+            <button onclick="editTimelineEntry('${c.id}',${realIdx})" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--text-muted);font-size:10px;padding:1px 6px;cursor:pointer;">✏ Edit</button>
+            <button onclick="deleteTimelineEntry('${c.id}',${realIdx})" style="background:none;border:1px solid rgba(231,76,60,.3);border-radius:4px;color:var(--red);font-size:10px;padding:1px 6px;cursor:pointer;">✕</button>
+          </div>
+          <div class="ttext" id="ttext-${realIdx}">${t.text}</div>
+          <div id="tedit-${realIdx}" style="display:none;">
+            <input class="fc" id="tinput-${realIdx}" value="${t.text.replace(/'/g,"&#39;")}" style="font-size:12px;padding:6px 10px;margin-bottom:6px;">
+            <div style="display:flex;gap:6px;margin-top:4px;">
+              <button class="btn btn-gold btn-sm" onclick="saveTimelineEntry('${c.id}',${realIdx})">Save</button>
+              <button class="btn btn-outline btn-sm" onclick="cancelTimelineEdit(${realIdx})">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
     });
     body+=`</div>`;
   }
@@ -904,6 +937,44 @@ function toast(msg, type='success'){
 }
 
 
+
+// ── TIMELINE EDITING ─────────────────────────────────────────
+function editTimelineEntry(caseId, idx){
+  document.getElementById('ttext-'+idx).style.display='none';
+  document.getElementById('tedit-'+idx).style.display='block';
+  document.getElementById('tinput-'+idx).focus();
+}
+function cancelTimelineEdit(idx){
+  document.getElementById('ttext-'+idx).style.display='block';
+  document.getElementById('tedit-'+idx).style.display='none';
+}
+async function saveTimelineEntry(caseId, idx){
+  const newText = document.getElementById('tinput-'+idx).value.trim();
+  if(!newText) return;
+  const c = cases.find(x=>x.id===caseId);
+  if(!c) return;
+  c.timeline[idx].text = newText;
+  const result = await api('PUT', '/cases/'+caseId, {...c, timeline: c.timeline});
+  if(result){
+    const cIdx = cases.findIndex(x=>x.id===caseId);
+    if(cIdx>=0) cases[cIdx] = result;
+    toast('Timeline updated ✓','success');
+    openDetail(caseId);
+  }
+}
+async function deleteTimelineEntry(caseId, idx){
+  if(!confirm('Delete this timeline entry?')) return;
+  const c = cases.find(x=>x.id===caseId);
+  if(!c) return;
+  c.timeline.splice(idx,1);
+  const result = await api('PUT', '/cases/'+caseId, {...c, timeline: c.timeline});
+  if(result){
+    const cIdx = cases.findIndex(x=>x.id===caseId);
+    if(cIdx>=0) cases[cIdx] = result;
+    toast('Entry deleted','success');
+    openDetail(caseId);
+  }
+}
 
 // ── INIT ─────────────────────────────────────────────────────
 loadAll();
