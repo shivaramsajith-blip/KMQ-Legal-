@@ -78,9 +78,11 @@ def update_case(cid):
     row = conn.execute('SELECT * FROM cases WHERE id=?',(cid,)).fetchone()
     if not row: conn.close(); return jsonify({'error':'not found'}),404
     tl = json.loads(row['timeline'] or '[]')
-    if d.get('new_timeline_entry'):
-        from datetime import date
-        tl.append({'date': str(date.today()), 'text': d['new_timeline_entry']})
+    if d.get('replace_timeline'):
+    tl = d.get('timeline', tl)
+elif d.get('new_timeline_entry'):
+    from datetime import date
+    tl.append({'date': str(date.today()), 'text': d['new_timeline_entry']})
     conn.execute('''UPDATE cases SET case_number=?,title=?,client=?,opposing=?,status=?,
         court=?,type=?,next_hearing=?,assignee=?,value=?,notes=?,timeline=?,updated_at=? WHERE id=?''',
         (d.get('case_number'),d.get('title'),d.get('client'),d.get('opposing'),d.get('status'),
