@@ -186,7 +186,27 @@
   .client-group-header .cg-toggle:hover{border-color:var(--gold);color:var(--gold);}
   .case-indent td:first-child{padding-left:28px !important;}
 
-    ::-webkit-scrollbar{width:5px;height:5px;}
+    .hearing-card{background:var(--dark2);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:16px;}
+  .hearing-card:hover{border-color:var(--gold);}
+  .hearing-card.today{border-left-color:var(--red);}
+  .hearing-card.soon{border-left-color:var(--blue);}
+  .hearing-card.upcoming{border-left-color:var(--gold);}
+  .hearing-card.past{border-left-color:var(--grey);opacity:0.6;}
+  .hearing-date-box{width:54px;height:54px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+  .hearing-date-box.today{background:rgba(231,76,60,.15);color:var(--red);}
+  .hearing-date-box.soon{background:rgba(52,152,219,.15);color:var(--blue);}
+  .hearing-date-box.upcoming{background:rgba(201,168,76,.13);color:var(--gold);}
+  .hearing-date-box.past{background:rgba(90,94,107,.15);color:var(--grey);}
+  .hearing-date-day{font-size:22px;font-weight:700;line-height:1;}
+  .hearing-date-mon{font-size:10px;letter-spacing:1px;text-transform:uppercase;}
+  .hearing-meta{flex:1;min-width:0;}
+  .hearing-title{font-size:14px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .hearing-sub{font-size:12px;color:var(--text-muted);}
+  .hearing-countdown{flex-shrink:0;text-align:right;}
+  .hearing-days{font-size:22px;font-weight:700;line-height:1;}
+  .hearing-days-label{font-size:10px;color:var(--text-muted);}
+  .hearing-section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);padding:14px 0 6px;font-weight:600;border-bottom:1px solid var(--border);margin-bottom:8px;}
+  ::-webkit-scrollbar{width:5px;height:5px;}
   ::-webkit-scrollbar-thumb{background:var(--dark4);border-radius:10px;}
 </style>
 </head>
@@ -202,6 +222,7 @@
     <div class="nav-label">Overview</div>
     <div class="nav-item active" onclick="showView('dashboard')"><span>⚖</span> Dashboard</div>
     <div class="nav-item" onclick="showView('cases')"><span>📁</span> All Cases <span class="nav-badge" id="nb-all">0</span></div>
+    <div class="nav-item" onclick="showView('hearings')"><span>📅</span> Hearings <span class="nav-badge red" id="nb-hearings">0</span></div>
   </div>
   <div class="nav-section">
     <div class="nav-label">Status</div>
@@ -298,6 +319,11 @@
     </tr></thead><tbody id="all-tbody"></tbody></table>
     <div id="empty-msg" class="empty" style="display:none"><div class="empty-icon">📂</div><div class="empty-text">No Cases Found</div><div>Adjust filters or add a new case.</div></div>
     </div>
+  </div>
+
+  <!-- HEARINGS -->
+  <div id="view-hearings" class="content" style="display:none">
+    <div id="hearings-body"></div>
   </div>
 
   <!-- SETTINGS -->
@@ -479,6 +505,9 @@ function updateBadges(){
   const active = cases.filter(c=>c.status==='Active'||c.status==='Hearing Scheduled').length;
   const urgent = cases.filter(c=>c.status==='Urgent'||(c.next_hearing&&daysUntil(c.next_hearing)<=7&&daysUntil(c.next_hearing)>=0)).length;
   const dormant = cases.filter(c=>c.status==='Dormant').length;
+  const hearingsSoon=cases.filter(c=>c.next_hearing&&daysUntil(c.next_hearing)>=0&&daysUntil(c.next_hearing)<=14).length;
+  const nbh=document.getElementById('nb-hearings');
+  if(nbh) nbh.textContent=hearingsSoon;
   document.getElementById('nb-all').textContent = cases.length;
   document.getElementById('nb-active').textContent = active;
   document.getElementById('nb-urgent').textContent = urgent;
@@ -639,14 +668,15 @@ function caseRow(c, full, extraClass=''){
 
 // ── VIEWS ────────────────────────────────────────────────────
 function showView(v){
-  ['dashboard','cases','settings'].forEach(x=>{
-    document.getElementById('view-'+x).style.display = x===v?(x==='dashboard'?'block':'block'):'none';
+  ['dashboard','cases','hearings','settings'].forEach(x=>{
+    document.getElementById('view-'+x).style.display = x===v?'block':'none';
   });
-  document.getElementById('page-title').textContent = {dashboard:'Dashboard',cases:'All Cases',settings:'Settings'}[v];
+  document.getElementById('page-title').textContent = {dashboard:'Dashboard',cases:'All Cases',hearings:'Hearings',settings:'Settings'}[v];
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   if(v==='dashboard') renderDashboard();
   if(v==='cases'){ currentFilter='All'; document.querySelectorAll('.chip').forEach((c,i)=>c.classList.toggle('active',i===0)); renderAll(); }
   if(v==='settings') loadSettings();
+  if(v==='hearings') renderHearings();
 }
 
 function filterStatus(s){ showView('cases'); currentFilter=s; document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.textContent.trim()===s)); renderAll(); }
@@ -799,6 +829,29 @@ function openDetail(id){
     <div class="di"><div class="dl">Claim Value</div><div class="dv">${c.value||'—'}</div></div>
   </div>`;
   if(c.notes) body+=`<div class="section-title">Case Notes</div><div class="note-box">${c.notes}</div>`;
+  const hd=daysUntil(c.next_hearing);
+  body+=`<div class="section-title" style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">
+    Next Hearing
+    <button class="btn btn-outline btn-sm" onclick="toggleAddHearing('${c.id}')">✏ Edit</button>
+  </div>
+  <div id="hearing-view-${c.id}" style="margin-bottom:12px;">
+    ${c.next_hearing?`<div style="display:flex;align-items:center;gap:12px;">
+      <div style="background:var(--dark3);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:15px;font-weight:600;">
+        📅 ${fdate(c.next_hearing)}
+        <span style="color:${hd===0?'var(--red)':hd>0?'var(--blue)':'var(--grey)'};font-size:13px;margin-left:8px;">
+          ${hd===0?'Today!':hd>0?hd+' days away':Math.abs(hd)+' days ago'}
+        </span>
+      </div>
+      <button onclick="clearHearing('${c.id}')" class="btn btn-danger btn-sm">✕ Remove</button>
+    </div>`:'<span style="color:var(--text-muted);">No hearing scheduled</span>'}
+  </div>
+  <div id="hearing-edit-${c.id}" style="display:none;margin-bottom:12px;">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <input type="date" class="fc" id="hearing-input-${c.id}" value="${c.next_hearing||''}" style="width:200px;">
+      <button class="btn btn-gold btn-sm" onclick="saveHearing('${c.id}')">Save</button>
+      <button class="btn btn-outline btn-sm" onclick="toggleAddHearing('${c.id}')">Cancel</button>
+    </div>
+  </div>`;
   if(c.timeline&&c.timeline.length){
     body+=`<div class="section-title">Progression Timeline</div><div class="timeline">`;
     [...c.timeline].reverse().forEach((t,i,a)=>{
@@ -1016,6 +1069,93 @@ async function deleteTimelineEntry(caseId, idx){
     if(cIdx>=0) cases[cIdx] = result;
     toast('Entry deleted','success');
     openDetail(caseId);
+  }
+}
+
+// ── HEARING MANAGEMENT ───────────────────────────────────────
+function renderHearings(){
+  const body=document.getElementById('hearings-body');
+  if(!body) return;
+  const withHearings=cases.filter(c=>c.next_hearing).sort((a,b)=>a.next_hearing.localeCompare(b.next_hearing));
+  if(!withHearings.length){
+    body.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No Hearings Scheduled</div><div>Add a next hearing date to any case to see it here.</div></div>';
+    return;
+  }
+  const today=[],soon=[],upcoming=[],past=[];
+  withHearings.forEach(c=>{
+    const d=daysUntil(c.next_hearing);
+    if(d===0) today.push(c);
+    else if(d>0&&d<=7) soon.push(c);
+    else if(d>7) upcoming.push(c);
+    else past.push(c);
+  });
+  function card(c){
+    const d=daysUntil(c.next_hearing);
+    const dt=new Date(c.next_hearing+'T00:00:00');
+    const day=dt.getDate();
+    const mon=dt.toLocaleString('en-GB',{month:'short'}).toUpperCase();
+    const cls=d===0?'today':d>0&&d<=7?'soon':d>7?'upcoming':'past';
+    const countdown=d===0?`<div class="hearing-days" style="color:var(--red)">TODAY</div>`:
+      d>0?`<div class="hearing-days" style="color:${d<=7?'var(--blue)':'var(--gold)'}">${d}</div><div class="hearing-days-label">days away</div>`:
+      `<div class="hearing-days" style="color:var(--grey)">${Math.abs(d)}</div><div class="hearing-days-label">days ago</div>`;
+    return `<div class="hearing-card ${cls}" onclick="openDetail('${c.id}')">
+      <div class="hearing-date-box ${cls}"><div class="hearing-date-day">${day}</div><div class="hearing-date-mon">${mon}</div></div>
+      <div class="hearing-meta">
+        <div class="hearing-title">${c.title}</div>
+        <div class="hearing-sub">${c.case_number||''} · <span class="court-tag">${c.court||''}</span></div>
+        <div style="margin-top:4px;">${statusBadge(c.status)}</div>
+      </div>
+      <div class="hearing-countdown">${countdown}</div>
+    </div>`;
+  }
+  function sec(label,items){
+    if(!items.length) return '';
+    return `<div class="hearing-section-label">${label}</div>`+items.map(card).join('');
+  }
+  body.innerHTML=sec('🔴 Today',today)+sec('🔵 This Week',soon)+sec('🟡 Upcoming',upcoming)+sec('⚫ Past Hearings',past);
+}
+
+function toggleAddHearing(caseId){
+  const edit=document.getElementById('hearing-edit-'+caseId);
+  const view=document.getElementById('hearing-view-'+caseId);
+  if(edit){
+    const showing=edit.style.display==='block';
+    edit.style.display=showing?'none':'block';
+    if(view) view.style.display=showing?'block':'none';
+  }
+}
+
+async function saveHearing(caseId){
+  const date=document.getElementById('hearing-input-'+caseId).value;
+  const c=cases.find(x=>x.id===caseId);
+  if(!c) return;
+  const result=await api('PUT','/cases/'+caseId,{
+    case_number:c.case_number,title:c.title,client:c.client,opposing:c.opposing,
+    status:c.status,court:c.court,type:c.type,next_hearing:date,
+    assignee:c.assignee,value:c.value,notes:c.notes,timeline_json:JSON.stringify(c.timeline)
+  });
+  if(result){
+    result.timeline=c.timeline;
+    const idx=cases.findIndex(x=>x.id===caseId);
+    if(idx>=0) cases[idx]=result;
+    updateBadges(); renderAll(); toast('Hearing saved ✓','success'); openDetail(caseId);
+  }
+}
+
+async function clearHearing(caseId){
+  if(!confirm('Remove this hearing date?')) return;
+  const c=cases.find(x=>x.id===caseId);
+  if(!c) return;
+  const result=await api('PUT','/cases/'+caseId,{
+    case_number:c.case_number,title:c.title,client:c.client,opposing:c.opposing,
+    status:c.status,court:c.court,type:c.type,next_hearing:'',
+    assignee:c.assignee,value:c.value,notes:c.notes,timeline_json:JSON.stringify(c.timeline)
+  });
+  if(result){
+    result.timeline=c.timeline;
+    const idx=cases.findIndex(x=>x.id===caseId);
+    if(idx>=0) cases[idx]=result;
+    updateBadges(); renderAll(); toast('Hearing removed','success'); openDetail(caseId);
   }
 }
 
